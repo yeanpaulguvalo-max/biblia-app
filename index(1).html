@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palabra del Día</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e2620">
+<style>
+  :root {
+    --papel: #f2ede1;
+    --papel-oscuro: #e8dfc9;
+    --tinta: #2e2620;
+    --tinta-suave: #6b5f4f;
+    --oro: #a8863b;
+    --oro-claro: #c9a45c;
+    --linea: #d4c7a8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--papel);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(168,134,59,0.05), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(168,134,59,0.05), transparent 40%);
+    color: var(--tinta);
+    font-family: 'Georgia', 'Iowan Old Style', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 20px;
+  }
+
+  .marco {
+    width: 100%;
+    max-width: 480px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    text-align: center;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--linea);
+    margin-bottom: 8px;
+  }
+
+  .eyebrow {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--oro);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--tinta);
+  }
+
+  .fecha {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    color: var(--tinta-suave);
+    margin-top: 6px;
+  }
+
+  .tarjeta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 12px;
+    position: relative;
+    min-height: 320px;
+  }
+
+  .comilla {
+    font-size: 64px;
+    line-height: 1;
+    color: var(--oro-claro);
+    opacity: 0.5;
+    font-family: 'Georgia', serif;
+    margin-bottom: -8px;
+  }
+
+  .versiculo {
+    font-size: 24px;
+    line-height: 1.55;
+    color: var(--tinta);
+    max-width: 400px;
+    transition: opacity 0.35s ease;
+  }
+
+  .versiculo.fade {
+    opacity: 0;
+  }
+
+  .referencia {
+    margin-top: 22px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oro);
+  }
+
+  .ad-slot {
+    width: 100%;
+    max-width: 480px;
+    min-height: 60px;
+    border: 1px dashed var(--linea);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+    margin: 20px 0;
+    background: var(--papel-oscuro);
+  }
+
+  footer {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .boton {
+    width: 100%;
+    background: var(--tinta);
+    color: var(--papel);
+    border: none;
+    padding: 16px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .boton:active {
+    background: var(--oro);
+  }
+
+  .libro-actual {
+    text-align: center;
+    margin-top: 14px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--tinta-suave);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+  <div class="marco">
+    <header>
+      <div class="eyebrow">Palabra del día</div>
+      <h1>Versículo al Azar</h1>
+      <div class="fecha" id="fecha"></div>
+    </header>
+
+    <div class="tarjeta">
+      <div class="comilla">&ldquo;</div>
+      <p class="versiculo" id="versiculo">Cargando...</p>
+      <div class="referencia" id="referencia"></div>
+    </div>
+  </div>
+
+  <div class="ad-slot">Espacio publicitario</div>
+
+  <footer>
+    <button class="boton" id="btnNuevo">Otro versículo</button>
+    <div class="libro-actual" id="contador"></div>
+  </footer>
+
+<script>
+  // Datos de ejemplo — acá después metemos tu base completa
+  const versiculos = [
+    { libro: "Salmos", cap: 23, ver: 1, texto: "Jehová es mi pastor; nada me faltará." },
+    { libro: "Juan", cap: 3, ver: 16, texto: "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna." },
+    { libro: "Filipenses", cap: 4, ver: 13, texto: "Todo lo puedo en Cristo que me fortalece." },
+    { libro: "Proverbios", cap: 3, ver: 5, texto: "Fíate de Jehová de todo tu corazón, y no te apoyes en tu propia prudencia." },
+    { libro: "Isaías", cap: 41, ver: 10, texto: "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo." },
+    { libro: "Josué", cap: 1, ver: 9, texto: "Mira que te mando que te esfuerces y seas valiente; no temas ni desmayes, porque Jehová tu Dios estará contigo en dondequiera que vayas." },
+    { libro: "Romanos", cap: 8, ver: 28, texto: "Sabemos que a los que aman a Dios, todas las cosas les ayudan a bien." },
+    { libro: "Mateo", cap: 11, ver: 28, texto: "Venid a mí todos los que estáis trabajados y cargados, y yo os haré descansar." }
+  ];
+
+  const elVersiculo = document.getElementById('versiculo');
+  const elReferencia = document.getElementById('referencia');
+  const elContador = document.getElementById('contador');
+  const elFecha = document.getElementById('fecha');
+  const btnNuevo = document.getElementById('btnNuevo');
+
+  let usados = [];
+
+  function elegirVersiculo() {
+    if (usados.length >= versiculos.length) usados = [];
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * versiculos.length);
+    } while (usados.includes(idx));
+    usados.push(idx);
+    return versiculos[idx];
+  }
+
+  function mostrarVersiculo() {
+    elVersiculo.classList.add('fade');
+    setTimeout(() => {
+      const v = elegirVersiculo();
+      elVersiculo.textContent = v.texto;
+      elReferencia.textContent = `${v.libro} ${v.cap}:${v.ver}`;
+      elContador.textContent = `${usados.length} de ${versiculos.length} vistos en esta sesión`;
+      elVersiculo.classList.remove('fade');
+    }, 350);
+  }
+
+  elFecha.textContent = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  btnNuevo.addEventListener('click', mostrarVersiculo);
+
+  mostrarVersiculo();
+</script>
+
+</body>
+</html>
