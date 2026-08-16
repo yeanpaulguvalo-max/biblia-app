@@ -390,8 +390,28 @@
     ctx.fillText(`${v.libro.toUpperCase()} ${v.cap}:${v.ver}`, ANCHO / 2, y + 40);
   }
 
-  function descargarCanvas() {
-    canvas.toBlob((blob) => {
+  function compartirOdescargar(tipo) {
+    canvas.toBlob(async (blob) => {
+      const archivo = new File([blob], 'versiculo-fondo.png', { type: 'image/png' });
+
+      // Intento 1: abrir el menú nativo de compartir de Android
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        try {
+          await navigator.share({
+            files: [archivo],
+            title: 'Versículo del día',
+            text: tipo === 'bloqueo'
+              ? 'Elegí "Establecer como fondo de pantalla" para tu pantalla de bloqueo'
+              : 'Elegí "Establecer como fondo de pantalla" para tu pantalla de inicio'
+          });
+          return;
+        } catch (err) {
+          // El usuario canceló el menú de compartir; no hacemos nada más
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Alternativa: si el celular no soporta compartir archivos, se descarga la imagen
       const url = URL.createObjectURL(blob);
       const enlace = document.createElement('a');
       enlace.href = url;
@@ -418,7 +438,7 @@
   document.querySelectorAll('.modal-opcion').forEach((btn) => {
     btn.addEventListener('click', () => {
       dibujarFondo(btn.dataset.tipo);
-      descargarCanvas();
+      compartirOdescargar(btn.dataset.tipo);
       overlay.classList.remove('abierto');
     });
   });
