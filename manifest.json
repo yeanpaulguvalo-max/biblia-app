@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Palabra del dia",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Palabra",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "Versículos bíblicos ",
+  "description": "Versículos bíblicos al azar, uno para cada día"
+}
