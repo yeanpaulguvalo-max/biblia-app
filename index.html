@@ -164,6 +164,77 @@
     color: var(--tinta-suave);
     letter-spacing: 0.05em;
   }
+
+  .boton-secundario {
+    background: transparent;
+    color: var(--tinta);
+    border: 1px solid var(--tinta);
+    margin-top: 10px;
+  }
+
+  .boton-secundario:active {
+    background: var(--papel-oscuro);
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(46, 38, 32, 0.55);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .overlay.abierto {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--papel);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px 16px 0 0;
+    padding: 24px 20px 32px;
+  }
+
+  .modal-titulo {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: var(--tinta-suave);
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .modal-opcion {
+    width: 100%;
+    background: var(--tinta);
+    color: var(--papel);
+    border: none;
+    padding: 16px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .modal-opcion:active {
+    background: var(--oro);
+  }
+
+  .modal-cancelar {
+    width: 100%;
+    background: transparent;
+    color: var(--tinta-suave);
+    border: none;
+    padding: 12px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -186,8 +257,20 @@
 
   <footer>
     <button class="boton" id="btnNuevo">Otro versículo</button>
+    <button class="boton boton-secundario" id="btnFondo">Usar como fondo de pantalla</button>
     <div class="libro-actual" id="contador"></div>
   </footer>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <p class="modal-titulo">¿Dónde vas a usar esta imagen?</p>
+      <button class="modal-opcion" data-tipo="inicio">Pantalla de inicio</button>
+      <button class="modal-opcion" data-tipo="bloqueo">Pantalla de bloqueo</button>
+      <button class="modal-cancelar" id="btnCancelar">Cancelar</button>
+    </div>
+  </div>
+
+  <canvas id="canvasFondo" style="display:none;"></canvas>
 
 <script>
   // Datos de ejemplo — acá después metemos tu base completa
@@ -236,6 +319,109 @@
   btnNuevo.addEventListener('click', mostrarVersiculo);
 
   mostrarVersiculo();
+
+  // --- Generar fondo de pantalla ---
+  const overlay = document.getElementById('overlay');
+  const btnFondo = document.getElementById('btnFondo');
+  const btnCancelar = document.getElementById('btnCancelar');
+  const canvas = document.getElementById('canvasFondo');
+  const ctx = canvas.getContext('2d');
+
+  function versiculoActual() {
+    const idx = usados[usados.length - 1];
+    return versiculos[idx];
+  }
+
+  function partirTexto(ctx, texto, maxAncho) {
+    const palabras = texto.split(' ');
+    const lineas = [];
+    let lineaActual = '';
+    for (const palabra of palabras) {
+      const prueba = lineaActual ? lineaActual + ' ' + palabra : palabra;
+      if (ctx.measureText(prueba).width > maxAncho && lineaActual) {
+        lineas.push(lineaActual);
+        lineaActual = palabra;
+      } else {
+        lineaActual = prueba;
+      }
+    }
+    if (lineaActual) lineas.push(lineaActual);
+    return lineas;
+  }
+
+  function dibujarFondo(tipo) {
+    const ANCHO = 1080;
+    const ALTO = 1920;
+    canvas.width = ANCHO;
+    canvas.height = ALTO;
+
+    ctx.fillStyle = '#f2ede1';
+    ctx.fillRect(0, 0, ANCHO, ALTO);
+
+    const v = versiculoActual();
+
+    // Zona segura: la pantalla de bloqueo deja más espacio arriba (reloj/notificaciones)
+    const centroY = tipo === 'bloqueo' ? ALTO * 0.58 : ALTO * 0.48;
+
+    ctx.fillStyle = '#c9a45c';
+    ctx.globalAlpha = 0.5;
+    ctx.font = '160px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u201C', ANCHO / 2, centroY - 260);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = '#2e2620';
+    ctx.font = '54px Georgia, serif';
+    ctx.textAlign = 'center';
+
+    const maxAncho = ANCHO * 0.78;
+    const lineas = partirTexto(ctx, v.texto, maxAncho);
+    const alturaLinea = 74;
+    const altoBloque = lineas.length * alturaLinea;
+    let y = centroY - altoBloque / 2;
+
+    for (const linea of lineas) {
+      ctx.fillText(linea, ANCHO / 2, y);
+      y += alturaLinea;
+    }
+
+    ctx.fillStyle = '#a8863b';
+    ctx.font = '32px Helvetica, Arial, sans-serif';
+    ctx.fillText(`${v.libro.toUpperCase()} ${v.cap}:${v.ver}`, ANCHO / 2, y + 40);
+  }
+
+  function descargarCanvas() {
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = 'versiculo-fondo.png';
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  }
+
+  btnFondo.addEventListener('click', () => {
+    overlay.classList.add('abierto');
+  });
+
+  btnCancelar.addEventListener('click', () => {
+    overlay.classList.remove('abierto');
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('abierto');
+  });
+
+  document.querySelectorAll('.modal-opcion').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      dibujarFondo(btn.dataset.tipo);
+      descargarCanvas();
+      overlay.classList.remove('abierto');
+    });
+  });
 </script>
 
 </body>
